@@ -1,0 +1,52 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "蓝牙设备发现应用"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "蓝牙设备发现能力"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "蓝牙设备发现"
+    },
+    {
+      "name": "bluetooth_reason",
+      "value": "需要蓝牙权限来扫描和发现附近的设备"
+    },
+    {
+      "name": "location_reason",
+      "value": "需要位置权限来发现蓝牙设备"
+    },
+    {
+      "name": "app_name",
+      "value": "蓝牙设备发现"
+    },
+    {
+      "name": "scan_button",
+      "value": "开始扫描"
+    },
+    {
+      "name": "stop_button",
+      "value": "停止扫描"
+    },
+    {
+      "name": "device_count",
+      "value": "已发现设备"
+    },
+    {
+      "name": "scanning",
+      "value": "正在扫描..."
+    },
+    {
+      "name": "bluetooth_off",
+      "value": "蓝牙未开启"
+    },
+    {
+      "name": "no_devices",
+      "value": "暂未发现设备"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "bluetoothdiscover",
+  "version": "1.0.0",
+  "description": "蓝牙设备发现应用",
+  "main": "",
+  "author": "",
+  "license": "",
+  "dependencies": {}
+}
