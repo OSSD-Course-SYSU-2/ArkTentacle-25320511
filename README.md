@@ -1,8 +1,20 @@
 # ArkTentacle - 粥批触须
 
-一款基于 HarmonyOS 的蓝牙设备发现与通信应用，支持设备扫描、内容广播和定向消息发送。
+## 项目简介
+ArkTentacle 是一款基于 HarmonyOS 的蓝牙设备发现与通信应用, 专为《明日方舟》玩家设计的线下同好社交工具。
 
-## 功能特性
+### 灵感来源
+
+“我出租屋里真的很多蟑螂, 但我 认识的粥批, 一个都没有。”
+ArkTentacle 正是为解决这一**蟑螂困境**而生。名字取义“触须”——像蟑螂的触角一样, 让你在拥挤的线下人潮中, 精准探测到隐藏的罗德岛同僚。
+
+### 核心功能
+基于蓝牙信号的同好雷达扫描：实时扫描附近同样开启应用的“粥批”, 距离越近信号越强
+支持设置“我推”且互相可见, 并向感兴趣的目标发送好友申请。
+ArkTentacle —— 让每一个“蟑螂”, 都能找到它的“窝”。
+
+
+## 技术特性
 
 ### 核心功能
 
@@ -17,7 +29,7 @@
 - 蓝牙状态实时显示
 - 扫描状态提示
 - 设备数量统计
-- 信号强度颜色指示（绿色：强，黄色：中，红色：弱）
+- 信号强度颜色指示（绿色：强, 黄色：中, 红色：弱）
 - 设备选中高亮显示
 - 发送状态反馈
 
@@ -53,7 +65,7 @@ demo/
 
 1. 在"可以输入喜爱的角色等内容"输入框中输入内容
 2. 点击"开始广播"按钮
-3. 内容将通过蓝牙 BLE 广播出去，其他设备可以接收到
+3. 内容将通过蓝牙 BLE 广播出去, 其他设备可以接收到
 4. 点击"停止广播"可以停止广播
 
 ### 2. 发送游戏ID到指定设备
@@ -104,7 +116,7 @@ demo/
 - `ohos.permission.DISCOVER_BLUETOOTH` - 发现蓝牙设备
 - `ohos.permission.LOCATION` - 位置权限（蓝牙扫描需要）
 
-权限已在 `module.json5` 中配置，运行时会自动请求。
+权限已在 `module.json5` 中配置, 运行时会自动请求。
 
 ## 构建要求
 
@@ -147,7 +159,7 @@ hvigorw assembleApp --mode project -p product=default
 
 ## 输出位置
 
-构建完成后，输出文件位于：
+构建完成后, 输出文件位于：
 - Debug HAP: `entry/build/default/outputs/default/entry-default-signed.hap`
 - Release HAP: `entry/build/default/outputs/default/entry-default-signed.hap`
 - APP: `build/outputs/entry-default-signed.app`
@@ -166,7 +178,7 @@ hvigorw assembleApp --mode project -p product=default
 
 #### BluetoothManager
 
-蓝牙管理类，封装了所有蓝牙操作：
+蓝牙管理类, 封装了所有蓝牙操作：
 
 - `startScan()` - 开始扫描设备
 - `stopScan()` - 停止扫描
@@ -178,7 +190,7 @@ hvigorw assembleApp --mode project -p product=default
 
 #### Index
 
-主页面，包含所有 UI 和交互逻辑：
+主页面, 包含所有 UI 和交互逻辑：
 
 - 设备扫描和显示
 - 广播控制
@@ -194,10 +206,9 @@ hvigorw assembleApp --mode project -p product=default
 - 实现定向消息发送功能
 - 完善UI界面和交互
 
-## 许可证
-
-本项目仅供学习和研究使用。
 
 ## 联系方式
 
-如有问题或建议，请提交 Issue 或 Pull Request。
+如有问题或建议, 也不用提交 Issue 或 Pull Request。
+因为这是一项作业而不是项目。
+如果你希望基于本项目改造, 直接copy即可。

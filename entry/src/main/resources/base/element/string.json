@@ -47,6 +47,10 @@
     {
       "name": "no_devices",
       "value": "暂未发现设备"
+    },
+    {
+      "name": "distributed_reason",
+      "value": "需要分布式权限来实现多端流转和设备协同"
     }
   ]
 }

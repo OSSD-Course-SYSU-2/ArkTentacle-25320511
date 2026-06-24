@@ -1,4 +1,6 @@
 import { BluetoothManager, DeviceInfo } from '../utils/BluetoothManager';
+import { DistributedDeviceManager, DistributedDevice } from '../utils/DistributedDeviceManager';
+import { HopManager, HopData, HopState } from '../utils/HopManager';
 import hilog from '@ohos.hilog';
 
 const TAG = 'Index';
@@ -17,16 +19,31 @@ struct Index {
   @State private selectedDevice: DeviceInfo | null = null;
   @State private sendStatus: string = '';
   
+  // 分布式设备相关状态
+  @State private distributedDevices: DistributedDevice[] = [];
+  @State private isDiscovering: boolean = false;
+  @State private selectedDistributedDevice: DistributedDevice | null = null;
+  @State private hopState: HopState = 'idle';
+  @State private hopMessage: string = '';
+  @State private receivedHopData: HopData | null = null;
+  @State private showDistributedPanel: boolean = false;
+  
   private bluetoothManager: BluetoothManager = new BluetoothManager();
+  private distributedDeviceManager: DistributedDeviceManager = new DistributedDeviceManager();
+  private hopManager: HopManager = new HopManager();
 
   aboutToAppear() {
     hilog.info(DOMAIN, TAG, 'Index page aboutToAppear');
     this.initBluetooth();
+    this.initDistributedDevice();
+    this.initHopManager();
   }
 
   aboutToDisappear() {
     hilog.info(DOMAIN, TAG, 'Index page aboutToDisappear');
     this.bluetoothManager.cleanup();
+    this.distributedDeviceManager.cleanup();
+    this.hopManager.cleanup();
   }
 
   private async initBluetooth() {
@@ -126,6 +143,84 @@ struct Index {
       this.sendStatus = '已发送: ' + this.secretMessageInput + ' 到 ' + this.selectedDevice.deviceName;
     } else {
       this.sendStatus = '发送失败';
+    }
+  }
+
+  // 初始化分布式设备管理器
+  private initDistributedDevice() {
+    this.distributedDeviceManager.setOnDeviceFound((devices: DistributedDevice[]) => {
+      this.distributedDevices = devices;
+    });
+
+    this.distributedDeviceManager.setOnDeviceStateChanged((device: DistributedDevice, state: 'online' | 'offline') => {
+      if (state === 'online') {
+        this.hopMessage = '设备上线: ' + device.deviceName;
+      } else {
+        this.hopMessage = '设备离线: ' + device.deviceName;
+      }
+    });
+  }
+
+  // 初始化流转管理器
+  private initHopManager() {
+    this.hopManager.setOnHopStateChanged((state: HopState, message: string) => {
+      this.hopState = state;
+      this.hopMessage = message;
+
+      // 如果接收到流转数据，更新UI
+      if (state === 'completed') {
+        const data = this.hopManager.restoreHopData();
+        if (data) {
+          this.receivedHopData = data;
+          this.deviceNameInput = data.deviceName;
+          this.secretMessageInput = data.message;
+        }
+      }
+    });
+  }
+
+  // 处理分布式设备发现按钮
+  private async handleDiscoverButton() {
+    if (this.isDiscovering) {
+      await this.distributedDeviceManager.stopDeviceDiscovery();
+      this.isDiscovering = false;
+    } else {
+      const success = await this.distributedDeviceManager.startDeviceDiscovery();
+      if (success) {
+        this.isDiscovering = true;
+        this.hopMessage = '正在发现分布式设备...';
+      } else {
+        this.hopMessage = '发现设备失败';
+      }
+    }
+  }
+
+  // 处理一键流转按钮
+  private async handleHopButton() {
+    if (!this.selectedDistributedDevice) {
+      this.hopMessage = '请先选择目标设备';
+      return;
+    }
+
+    if (!this.deviceNameInput && !this.secretMessageInput) {
+      this.hopMessage = '请输入要流转的内容';
+      return;
+    }
+
+    // 准备流转数据
+    this.hopManager.prepareHopData(
+      this.deviceNameInput,
+      this.secretMessageInput,
+      'current_device_id'
+    );
+
+    // 执行流转
+    const success = await this.hopManager.hopToDevice(this.selectedDistributedDevice);
+    
+    if (success) {
+      this.hopMessage = '流转成功！';
+    } else {
+      this.hopMessage = '流转失败';
     }
   }
 
@@ -238,6 +333,96 @@ struct Index {
         })
         .margin({ bottom: 10 })
 
+      // 分隔线
+      Divider()
+        .width('80%')
+        .height(2)
+        .color('#E0E0E0')
+        .margin({ top: 10, bottom: 10 })
+
+      // 多端流转区域标题
+      Row() {
+        Text('多端流转')
+          .fontSize(20)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_color'))
+      }
+      .width('100%')
+      .justifyContent(FlexAlign.Center)
+      .margin({ top: 10, bottom: 10 })
+
+      // 流转状态提示
+      if (this.hopMessage !== '') {
+        Row() {
+          Text('流转状态: ')
+            .fontSize(14)
+          Text(this.hopMessage)
+            .fontSize(14)
+            .fontColor(this.getHopStateColor())
+        }
+        .margin({ bottom: 10 })
+      }
+
+      // 接收到的流转数据显示
+      if (this.receivedHopData !== null) {
+        Column() {
+          Text('接收到流转数据:')
+            .fontSize(14)
+            .fontColor('#007DFF')
+            .margin({ bottom: 5 })
+          Text('角色: ' + this.receivedHopData.deviceName)
+            .fontSize(14)
+          Text('游戏ID: ' + this.receivedHopData.message)
+            .fontSize(14)
+        }
+        .width('80%')
+        .padding(10)
+        .backgroundColor('#E3F2FD')
+        .borderRadius(8)
+        .margin({ bottom: 10 })
+      }
+
+      // 发现分布式设备按钮
+      Button(this.isDiscovering ? '停止发现' : '发现分布式设备')
+        .width('80%')
+        .height(50)
+        .fontSize(18)
+        .backgroundColor(this.isDiscovering ? '#FF5555' : '#9C27B0')
+        .onClick(() => {
+          this.handleDiscoverButton();
+        })
+        .margin({ bottom: 10 })
+
+      // 一键流转按钮
+      Button('一键流转')
+        .width('80%')
+        .height(50)
+        .fontSize(18)
+        .backgroundColor('#E91E63')
+        .onClick(() => {
+          this.handleHopButton();
+        })
+        .margin({ bottom: 10 })
+
+      // 分布式设备列表
+      if (this.distributedDevices.length > 0) {
+        Text('可流转设备列表:')
+          .fontSize(16)
+          .fontWeight(FontWeight.Medium)
+          .margin({ top: 10, bottom: 5 })
+
+        List() {
+          ForEach(this.distributedDevices, (device: DistributedDevice) => {
+            ListItem() {
+              this.DistributedDeviceItem(device)
+            }
+          }, (device: DistributedDevice) => device.deviceId)
+        }
+        .width('100%')
+        .height(180)
+        .padding({ left: 20, right: 20 })
+      }
+
       // 发送状态提示
       if (this.sendStatus !== '') {
         Text(this.sendStatus)
@@ -326,6 +511,72 @@ struct Index {
       return '#FFAA00'; // 信号中等 - 黄色
     } else {
       return '#FF0000'; // 信号弱 - 红色
+    }
+  }
+
+  // 分布式设备列表项
+  @Builder
+  DistributedDeviceItem(device: DistributedDevice) {
+    Row() {
+      Column() {
+        Text(device.deviceName)
+          .fontSize(16)
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('app.color.text_color'))
+        
+        Row() {
+          Text('类型: ' + device.deviceType)
+            .fontSize(12)
+            .fontColor('#999999')
+            .margin({ right: 10 })
+          
+          Text('状态: ' + device.deviceState)
+            .fontSize(12)
+            .fontColor(device.deviceState === 'online' ? '#00AA00' : '#FF0000')
+        }
+        .margin({ top: 4 })
+      }
+      .alignItems(HorizontalAlign.Start)
+      .layoutWeight(1)
+
+      Column() {
+        // 显示选中状态
+        if (this.selectedDistributedDevice && this.selectedDistributedDevice.deviceId === device.deviceId) {
+          Text('已选中')
+            .fontSize(12)
+            .fontColor('#E91E63')
+            .margin({ top: 4 })
+        }
+      }
+      .alignItems(HorizontalAlign.End)
+    }
+    .width('100%')
+    .padding(15)
+    .margin({ top: 10 })
+    .borderRadius(8)
+    .backgroundColor(this.selectedDistributedDevice && this.selectedDistributedDevice.deviceId === device.deviceId ? '#FCE4EC' : '#F5F5F5')
+    .onClick(() => {
+      // 点击选择设备
+      this.selectedDistributedDevice = device;
+      this.hopMessage = '已选择设备: ' + device.deviceName;
+    })
+  }
+
+  // 获取流转状态颜色
+  private getHopStateColor(): string {
+    switch (this.hopState) {
+      case 'idle':
+        return '#999999';
+      case 'preparing':
+        return '#FFAA00';
+      case 'hopping':
+        return '#007DFF';
+      case 'completed':
+        return '#00AA00';
+      case 'failed':
+        return '#FF0000';
+      default:
+        return '#999999';
     }
   }
 }
